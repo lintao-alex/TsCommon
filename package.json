@@ -1,0 +1,23 @@
+{
+  "name": "tscommon",
+  "version": "1.0.0",
+  "description": "common component for typescript project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lintao-alex/TsCommon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lintao-alex/TsCommon/issues"
+  },
+  "homepage": "https://github.com/lintao-alex/TsCommon#readme",
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}
