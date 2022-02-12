@@ -16,7 +16,9 @@ let orgStudent: IStudentData = {
 let reactStudent = createReactData(orgStudent)
 
 function displayStudent() {
-    console.log(`hello my name is ${reactStudent.name}, lv${reactStudent.lv}, at quality ${reactStudent.quality}`)
+    let result = JSON.stringify(reactStudent,null,2)
+    console.log(result)
+    return result
 }
 
 markReactFn(displayStudent)
@@ -25,6 +27,7 @@ console.log("First call")
 displayStudent()
 
 clearReactFn()
+
 console.log("Then react")
+
 reactStudent.lv++
-reactStudent.quality++
