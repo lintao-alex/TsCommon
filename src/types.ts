@@ -16,6 +16,7 @@ export type ICallback<T extends IAnyCall<R>, R=any> = [
 ]
 
 export  type ICallbackThis<T extends IAnyCall<R>, R=any> = [
-    any,
-    ...ICallback<T, R>
+    callback: T,
+    caller: any,
+    ...args: Parameters<T>
 ]
