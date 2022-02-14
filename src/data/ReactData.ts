@@ -20,13 +20,13 @@ export function clearReactFn() {
 }
 
 export function createReactData<T extends PureData>(orgData: T): T {
-    let myReactFn: ReactFn|undefined;
+    let myReactFnList: ReactFn[] = [];
     let callCnt = 0; //make reactFn only be called once at next frame
 
     const obj =  Proxy.revocable(orgData, {
         get(target: T, p: string | symbol, receiver: any): any {
-            if(!myReactFn) {
-                myReactFn = cur_react_fn;
+            if(cur_react_fn && myReactFnList.findIndex(v=>isSameFn(v, cur_react_fn))<0) {
+                myReactFnList.push(cur_react_fn)
             }
             return target[p]
         },
@@ -45,7 +45,9 @@ export function createReactData<T extends PureData>(orgData: T): T {
     function callReactFn() {
         --callCnt
         if(callCnt == 0) {
-            if(myReactFn) myReactFn[0].call(myReactFn[1])
+            for(let [fn, caller] of myReactFnList) {
+                fn.call(caller)
+            }
         } else if(callCnt<0) {
             throw "call too much"
         }
@@ -54,5 +56,10 @@ export function createReactData<T extends PureData>(orgData: T): T {
     //todo revoke
 }
 
-function test() {
+function isSameFn(fn1: ReactFn, fn2: ReactFn) {
+    if(fn1[0]!=fn2[0]) return false
+    const caller1 = fn1[1]
+    const caller2 = fn2[1]
+    if(!caller1 && !caller2) return true
+    return caller1 == caller2
 }
