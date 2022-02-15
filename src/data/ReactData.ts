@@ -20,36 +20,53 @@ export function clearReactFn() {
 }
 
 export function createReactData<T extends PureData>(orgData: T): T {
-    let myReactFnList: ReactFn[] = [];
-    let callCnt = 0; //make reactFn only be called once at next frame
+    let MyReactFnMap: Record<string, ReactFn[]> = {};
+    let NextCallPropertyList: string[] = [];
 
     const obj =  Proxy.revocable(orgData, {
-        get(target: T, p: string | symbol, receiver: any): any {
-            if(cur_react_fn && myReactFnList.findIndex(v=>isSameFn(v, cur_react_fn))<0) {
-                myReactFnList.push(cur_react_fn)
+        get(target: T, p: string): any {
+            if(cur_react_fn) {
+                let list = MyReactFnMap[p]
+                if(!list) {
+                    MyReactFnMap[p] = [cur_react_fn]
+                } else if(list.findIndex(v=>isSameFn(v,cur_react_fn))<0) {
+                    list.push(cur_react_fn)
+                }
             }
             return target[p]
         },
-        set(target: T, p: string | symbol, value: any, receiver: any): boolean {
+        set(target: T, p: string, value: any): boolean {
             /** todo
              * check same value
              * recursion call by set in render
+             * same call from other ReactData
              */
             target[p] = value
-            ++callCnt
-            nextFrame(callReactFn, null);
+            if(NextCallPropertyList.indexOf(p)<0) {
+                NextCallPropertyList.push(p)
+                if (NextCallPropertyList.length == 1) {
+                    nextFrame(callReactFn, null);
+                }
+            }
             return true
         }
     })
 
     function callReactFn() {
-        --callCnt
-        if(callCnt == 0) {
-            for(let [fn, caller] of myReactFnList) {
-                fn.call(caller)
+        let callList: ReactFn[] = [];//exclude same call from different property
+        for(let property of NextCallPropertyList) {
+            let list = MyReactFnMap[property];
+            if(!!list) {
+                for(let reactFn of list) {
+                    if(callList.findIndex(v=>isSameFn(v,reactFn))<0) {
+                        callList.push(reactFn)
+                    }
+                }
             }
-        } else if(callCnt<0) {
-            throw "call too much"
+        }
+        NextCallPropertyList.length = 0
+        for(let [fn, caller] of callList) {
+            fn.call(caller)
         }
     }
     return obj.proxy
